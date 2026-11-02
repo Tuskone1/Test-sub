@@ -7,9 +7,9 @@ ROOT = Path(__file__).resolve().parent
 SETTINGS = json.loads((ROOT / 'settings.json').read_text(encoding='utf-8'))
 OUTPUT = ROOT / 'output' / 'subscription.json'
 REPORT = ROOT / 'output' / 'report.json'
-NAMES = {'DE':'🇩🇪 Германия', 'FI':'🇫🇮 Финляндия', 'SE':'🇸🇪 Швеция', 'NL':'🇳🇱 Нидерланды', 'US':'🇺🇸 США', 'BYPASS':'🇪🇺 Обход'}
-ORDER = ['DE','FI','SE','NL','US','BYPASS']
-RU_DOMAINS = ['.ru','.su','.xn--p1ai','.vk.com','vk.com','.userapi.com','.mail.ru','.ok.ru','.yandex.ru','.wink.ru','.more.tv','.kion.ru','.sfera.fm']
+NAMES = {'DE':'🇩🇪 Германия', 'FI':'🇫🇮 Финляндия', 'SE':'🇸🇪 Швеция', 'NL':'🇳🇱 Нидерланды', 'US':'🇺🇸 США', 'OTHER':'🌍 Другие страны', 'BYPASS':'🇪🇺 Обход'}
+ORDER = ['DE','FI','SE','NL','US','OTHER','BYPASS']
+RU_DOMAINS = ['domain:ru','domain:su','domain:xn--p1ai','domain:vk.com','domain:userapi.com','domain:mail.ru','domain:ok.ru','domain:yandex.ru','domain:wink.ru','domain:more.tv','domain:kion.ru','domain:sfera.fm']
 PROBE = SETTINGS.get('probe_url', 'https://cp.cloudflare.com/generate_204')
 
 def timestamp(): return datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
@@ -127,7 +127,7 @@ def config_for_test(out,port):
     o=copy.deepcopy(out); o['tag']='proxy'
     return {'log':{'loglevel':'error'}, 'inbounds':[{'listen':'127.0.0.1','port':port,'protocol':'http','settings':{}}], 'outbounds':[o], 'routing':{'rules':[{'type':'field','inboundTag':[], 'outboundTag':'proxy'}]}}
 
-def test_one(item):
+def test_one(item, probe_url=None):
     if not safe_target(out_host(item['outbound'])): return None
     port=alloc_port(); conf=config_for_test(item['outbound'],port)
     # Simplify routing: the only outbound is necessarily used.
@@ -145,7 +145,7 @@ def test_one(item):
                 except OSError: time.sleep(.1)
             if not ready: return None
             start=time.monotonic()
-            r=subprocess.run(['curl','--silent','--show-error','--output','/dev/null','--write-out','%{http_code}', '--max-time',str(SETTINGS.get('timeout_seconds',10)), '--noproxy','', '--proxy',f'http://127.0.0.1:{port}', PROBE],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True,timeout=int(SETTINGS.get('timeout_seconds',10))+3)
+            r=subprocess.run(['curl','--silent','--show-error','--output','/dev/null','--write-out','%{http_code}', '--max-time',str(SETTINGS.get('timeout_seconds',10)), '--noproxy','', '--proxy',f'http://127.0.0.1:{port}', probe_url or PROBE],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True,timeout=int(SETTINGS.get('timeout_seconds',10))+3)
             if r.returncode!=0 or r.stdout.strip() not in ('200','204'): return None
             item['latency_ms']=round((time.monotonic()-start)*1000); return item
         except (subprocess.TimeoutExpired,OSError): return None
@@ -157,7 +157,7 @@ def test_one(item):
 def inbounds():
     return [{'listen':'127.0.0.1','port':10808,'protocol':'socks','settings':{'auth':'noauth','udp':True},'sniffing':{'enabled':True,'destOverride':['http','tls','quic']},'tag':'socks'}, {'listen':'127.0.0.1','port':10809,'protocol':'http','settings':{},'tag':'http'}]
 
-def profile(name, nodes):
+def profile(name, nodes, burst=False):
     outs=[]
     for i,n in enumerate(nodes,1):
         o=copy.deepcopy(n['outbound']);o['tag']=f'node-{i:03d}'; outs.append(o)
@@ -165,9 +165,14 @@ def profile(name, nodes):
     routing={'domainStrategy':'AsIs','rules':rules}
     config={'remarks':name,'log':{'loglevel':'warning'},'inbounds':inbounds(), 'outbounds':outs+[{'tag':'direct','protocol':'freedom'},{'tag':'block','protocol':'blackhole'}], 'routing':routing}
     if len(outs)>1:
-        routing['balancers']=[{'tag':'auto','selector':['node-'],'strategy':{'type':'leastPing'},'fallbackTag':'node-001'}]
+        strategy={'type':'leastLoad','settings':{'expected':1,'tolerance':0.25}} if burst else {'type':'leastPing'}
+        routing['balancers']=[{'tag':'auto','selector':['node-'],'strategy':strategy,'fallbackTag':'node-001'}]
         rules.append({'type':'field','network':'tcp,udp','balancerTag':'auto'})
-        config['observatory']={'subjectSelector':['node-'],'probeUrl':PROBE,'probeInterval':'1m','enableConcurrency':True}
+        if burst:
+            # Separate comparison profile; measurements occur from the user's device.
+            config['burstObservatory']={'subjectSelector':['node-'],'pingConfig':{'destination':PROBE,'interval':'1m','sampling':3,'timeout':'5s'}}
+        else:
+            config['observatory']={'subjectSelector':['node-'],'probeUrl':PROBE,'probeInterval':'1m','enableConcurrency':True}
     else: rules.append({'type':'field','network':'tcp,udp','outboundTag':'node-001'})
     return config
 
@@ -195,7 +200,11 @@ def main():
     if not shutil.which('xray') or not shutil.which('curl'): raise SystemExit('xray and curl are required')
     old,old_report=read_previous(); groups={x:[] for x in ORDER}; source_reports=[]; seen={x:set() for x in ORDER}
     limit=max(1,min(int(SETTINGS.get('max_candidates_per_source',30)),100))
-    for source in SETTINGS['sources']:
+    sources=list(SETTINGS['sources'])
+    # Optional URL goes in GitHub Actions secrets, never in this public file.
+    if os.environ.get('EXTRA_SOURCE_URL', '').strip():
+        sources.append({'group':'BACKUP','url':os.environ['EXTRA_SOURCE_URL'].strip()})
+    for source in sources:
         group=source['group']; report={'group':group}
         try:
             raw=fetch_source(source['url']); found=[]
@@ -204,7 +213,7 @@ def main():
                 if not line.startswith(('vless://','trojan://','hysteria2://','hy2://')): continue
                 item=parse_link(line)
                 if not item: continue
-                target=inferred_group(item['label']) if group=='BACKUP' else group
+                target=(inferred_group(item['label']) or 'OTHER') if group=='BACKUP' else group
                 if target not in groups: continue
                 key=hashlib.sha256(json.dumps(item['outbound'],sort_keys=True).encode()).hexdigest()
                 if key in seen[target]: continue
@@ -237,6 +246,28 @@ def main():
                 result=fut.result()
                 if result: checked[futs[fut]].append(result)
             except Exception as e: print('Test error:',type(e).__name__,flush=True)
+    # Re-test the best initial candidates against a second HTTPS destination.
+    # Require both tests to succeed instead of trusting a single lucky response.
+    first_pass={g:list(checked[g]) for g in ORDER}
+    finalists=[]
+    for group in ORDER:
+        ranked=sorted(first_pass[group],key=lambda n:n['latency_ms'])
+        preferred=next((n for n in ranked if n['priority']==0),None)
+        pool=(([preferred] if preferred else []) + [n for n in ranked if n is not preferred])[:10]
+        for item in pool:
+            item['first_latency_ms']=item['latency_ms']; finalists.append((group,item))
+    verified={x:[] for x in ORDER}
+    verify_url=SETTINGS.get('verify_url','https://www.gstatic.com/generate_204')
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1,min(int(SETTINGS.get('workers',8)),16))) as ex:
+        futs={ex.submit(test_one,item,verify_url):group for group,item in finalists}
+        for fut in concurrent.futures.as_completed(futs):
+            try:
+                result=fut.result()
+                if result:
+                    result['latency_ms']=max(result['first_latency_ms'],result['latency_ms'])
+                    verified[futs[fut]].append(result)
+            except Exception as e: print('Verification error:',type(e).__name__,flush=True)
+    checked=verified
     max_n=max(1,min(int(SETTINGS.get('max_per_group',5)),5)); selected={}; stats={}; now=timestamp()
     for g in ORDER:
         # First slot is the fastest working VLESS/TCP/Reality, if any.
@@ -249,15 +280,18 @@ def main():
             nodes=previous_nodes(old,NAMES[g]); state='previous' if nodes else 'empty'
             tested_at=(old_report.get('groups',{}).get(g,{}) or {}).get('last_success_utc') if nodes else None
         selected[g]=nodes
-        stats[g]={'status':state,'candidates_tested':len(groups[g]),'passed':len(checked[g]),'selected':len(nodes),'hysteria2_tested':sum(x['outbound']['protocol']=='hysteria' for x in groups[g]),'hysteria2_passed':sum(x['outbound']['protocol']=='hysteria' for x in checked[g]),'hysteria2_selected':sum(x['outbound']['protocol']=='hysteria' for x in nodes),'last_success_utc':tested_at}
+        stats[g]={'status':state,'candidates_tested':len(groups[g]),'first_passed':len(first_pass[g]),'passed':len(checked[g]),'selected':len(nodes),'hysteria2_tested':sum(x['outbound']['protocol']=='hysteria' for x in groups[g]),'hysteria2_passed':sum(x['outbound']['protocol']=='hysteria' for x in checked[g]),'hysteria2_selected':sum(x['outbound']['protocol']=='hysteria' for x in nodes),'last_success_utc':tested_at}
         print(f"{g}: {state}; passed={len(checked[g])}; selected={len(nodes)}",flush=True)
     profiles=[]; normal=[n for g in ORDER[:-1] for n in selected[g]]
-    if normal: profiles.append(profile('🌐 Автовыбор',normal))
+    if normal:
+        profiles.append(profile('🌐 Автовыбор',normal))
+        if len(normal)>1: profiles.append(profile('🧪 Автовыбор Burst',normal,burst=True))
     for g in ORDER[:-1]:
         if selected[g]: profiles.append(profile(NAMES[g], selected[g]))
     bypass=selected['BYPASS']
     if bypass:
         profiles.append(profile('🇪🇺 Автовыбор Обход',bypass))
+        if len(bypass)>1: profiles.append(profile('🧪 Автовыбор Обход Burst',bypass,burst=True))
         profiles.append(profile(NAMES['BYPASS'],bypass)) # stores all nodes for future fallback
         for idx,node in enumerate(bypass,1): profiles.append(profile(f'🇪🇺 Обход #{idx}',[node]))
     if not profiles:
@@ -265,6 +299,6 @@ def main():
         save(REPORT,{'mode':'auto','updated_utc':now,'status':'no_working_servers','sources':source_reports,'groups':stats})
         if not OUTPUT.exists(): save(OUTPUT,[])
         return
-    save(OUTPUT,profiles); save(REPORT,{'mode':'auto','updated_utc':now,'probe_url':PROBE,'sources':source_reports,'groups':stats, 'notes':['Latency is measured from GitHub runner, not user device.','Backup country inferred from source label, not independently verified.','Bypass status is not verified against your network whitelist.']})
+    save(OUTPUT,profiles); save(REPORT,{'mode':'auto','updated_utc':now,'probe_url':PROBE,'verify_url':verify_url,'sources':source_reports,'groups':stats, 'notes':['Latency is measured from GitHub runner, not user device.','Backup country inferred from source label, not independently verified.','Bypass status is not verified against your network whitelist.', 'Burst and leastLoad profiles are experimental comparisons, not guaranteed improvements.']})
 
 if __name__=='__main__': main()
