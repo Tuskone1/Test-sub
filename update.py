@@ -176,6 +176,46 @@ def profile(name, nodes, burst=False):
     else: rules.append({'type':'field','network':'tcp,udp','outboundTag':'node-001'})
     return config
 
+def reference_auto(name, groups):
+    """Build one auto profile in the format supplied by the user."""
+    nodes=[]
+    for group,items in groups:
+        for index,item in enumerate(items,1):
+            ob=copy.deepcopy(item['outbound'])
+            label=NAMES[group]
+            ob['tag']=label if index==1 else f'{label} {index}'
+            nodes.append(ob)
+    if not nodes: return None
+    tags=[o['tag'] for o in nodes]
+    sock_in, http_in = inbounds()
+    http_in['settings']={'allowTransparent':False}
+    http_in['sniffing']={'enabled':True,'destOverride':['http','tls','quic']}
+    return {
+        'log':{'loglevel':'warning'},
+        'remarks':name,
+        'meta':{'serverDescription':'Сам выбирает конфиг'},
+        'burstObservatory':{
+            'subjectSelector':tags,
+            'pingConfig':{'destination':'http://www.gstatic.com/generate_204','interval':'3m','sampling':5,'timeout':'3s'}
+        },
+        'inbounds':[sock_in,http_in],
+        'outbounds':nodes + [
+            {'protocol':'freedom','tag':'direct'},
+            {'protocol':'blackhole','settings':{},'tag':'block'},
+            {'protocol':'dns','tag':'dns-out'}
+        ],
+        'stats':{},
+        'policy':{'system':{'statsInboundUplink':True,'statsInboundDownlink':True,'statsOutboundUplink':True,'statsOutboundDownlink':True}},
+        'routing':{
+            'domainStrategy':'AsIs','domainMatcher':'hybrid',
+            'balancers':[{'tag':'auto','selector':tags,'fallbackTag':tags[0],
+                          'strategy':{'type':'leastLoad','settings':{'expected':1,'maxRTT':'2s','tolerance':0.25}}}],
+            'rules':[{'type':'field','ip':['geoip:private'],'outboundTag':'block'},
+                     {'type':'field','domain':RU_DOMAINS,'outboundTag':'direct'},
+                     {'type':'field','network':'tcp,udp','balancerTag':'auto'}]
+        }
+    }
+
 def read_previous():
     try:
         profiles=json.loads(OUTPUT.read_text(encoding='utf-8')); report=json.loads(REPORT.read_text(encoding='utf-8'))
@@ -282,16 +322,13 @@ def main():
         selected[g]=nodes
         stats[g]={'status':state,'candidates_tested':len(groups[g]),'first_passed':len(first_pass[g]),'passed':len(checked[g]),'selected':len(nodes),'hysteria2_tested':sum(x['outbound']['protocol']=='hysteria' for x in groups[g]),'hysteria2_passed':sum(x['outbound']['protocol']=='hysteria' for x in checked[g]),'hysteria2_selected':sum(x['outbound']['protocol']=='hysteria' for x in nodes),'last_success_utc':tested_at}
         print(f"{g}: {state}; passed={len(checked[g])}; selected={len(nodes)}",flush=True)
-    profiles=[]; normal=[n for g in ORDER[:-1] for n in selected[g]]
-    if normal:
-        profiles.append(profile('🌐 Автовыбор',normal))
-        if len(normal)>1: profiles.append(profile('🧪 Автовыбор Burst',normal,burst=True))
+    profiles=[]; normal_groups=[(g,selected[g]) for g in ORDER[:-1] if selected[g]]
+    if normal_groups: profiles.append(reference_auto('🇪🇺 Автовыбор',normal_groups))
     for g in ORDER[:-1]:
         if selected[g]: profiles.append(profile(NAMES[g], selected[g]))
     bypass=selected['BYPASS']
     if bypass:
-        profiles.append(profile('🇪🇺 Автовыбор Обход',bypass))
-        if len(bypass)>1: profiles.append(profile('🧪 Автовыбор Обход Burst',bypass,burst=True))
+        profiles.append(reference_auto('🇪🇺 Автовыбор Обход',[('BYPASS',bypass)]))
         profiles.append(profile(NAMES['BYPASS'],bypass)) # stores all nodes for future fallback
         for idx,node in enumerate(bypass,1): profiles.append(profile(f'🇪🇺 Обход #{idx}',[node]))
     if not profiles:
@@ -299,6 +336,6 @@ def main():
         save(REPORT,{'mode':'auto','updated_utc':now,'status':'no_working_servers','sources':source_reports,'groups':stats})
         if not OUTPUT.exists(): save(OUTPUT,[])
         return
-    save(OUTPUT,profiles); save(REPORT,{'mode':'auto','updated_utc':now,'probe_url':PROBE,'verify_url':verify_url,'sources':source_reports,'groups':stats, 'notes':['Latency is measured from GitHub runner, not user device.','Backup country inferred from source label, not independently verified.','Bypass status is not verified against your network whitelist.', 'Burst and leastLoad profiles are experimental comparisons, not guaranteed improvements.']})
+    save(OUTPUT,profiles); save(REPORT,{'mode':'auto','updated_utc':now,'probe_url':PROBE,'verify_url':verify_url,'sources':source_reports,'groups':stats, 'notes':['Latency is measured from GitHub runner, not user device.','Backup country inferred from source label, not independently verified.','Bypass status is not verified against your network whitelist.']})
 
 if __name__=='__main__': main()
