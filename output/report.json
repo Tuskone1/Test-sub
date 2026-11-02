@@ -1,0 +1,116 @@
+{
+  "mode": "auto",
+  "updated_utc": "2026-11-02T18:32:30+00:00",
+  "probe_url": "https://cp.cloudflare.com/generate_204",
+  "sources": [
+    {
+      "group": "DE",
+      "status": "ok",
+      "candidates_added": 30
+    },
+    {
+      "group": "FI",
+      "status": "ok",
+      "candidates_added": 20
+    },
+    {
+      "group": "SE",
+      "status": "ok",
+      "candidates_added": 10
+    },
+    {
+      "group": "NL",
+      "status": "ok",
+      "candidates_added": 30
+    },
+    {
+      "group": "US",
+      "status": "ok",
+      "candidates_added": 30
+    },
+    {
+      "group": "BYPASS",
+      "status": "ok",
+      "candidates_added": 3
+    },
+    {
+      "group": "BYPASS",
+      "status": "ok",
+      "candidates_added": 3
+    },
+    {
+      "group": "BYPASS",
+      "status": "ok",
+      "candidates_added": 26
+    },
+    {
+      "group": "BYPASS",
+      "status": "ok",
+      "candidates_added": 18
+    },
+    {
+      "group": "BACKUP",
+      "status": "ok",
+      "candidates_added": 30
+    },
+    {
+      "group": "BACKUP",
+      "status": "ok",
+      "candidates_added": 4
+    },
+    {
+      "group": "BACKUP",
+      "status": "ok",
+      "candidates_added": 2
+    }
+  ],
+  "groups": {
+    "DE": {
+      "status": "fresh",
+      "candidates_tested": 45,
+      "passed": 31,
+      "selected": 5,
+      "last_success_utc": "2026-11-02T18:32:30+00:00"
+    },
+    "FI": {
+      "status": "fresh",
+      "candidates_tested": 22,
+      "passed": 18,
+      "selected": 5,
+      "last_success_utc": "2026-11-02T18:32:30+00:00"
+    },
+    "SE": {
+      "status": "fresh",
+      "candidates_tested": 11,
+      "passed": 11,
+      "selected": 5,
+      "last_success_utc": "2026-11-02T18:32:30+00:00"
+    },
+    "NL": {
+      "status": "fresh",
+      "candidates_tested": 43,
+      "passed": 32,
+      "selected": 5,
+      "last_success_utc": "2026-11-02T18:32:30+00:00"
+    },
+    "US": {
+      "status": "fresh",
+      "candidates_tested": 34,
+      "passed": 29,
+      "selected": 5,
+      "last_success_utc": "2026-11-02T18:32:30+00:00"
+    },
+    "BYPASS": {
+      "status": "fresh",
+      "candidates_tested": 50,
+      "passed": 21,
+      "selected": 5,
+      "last_success_utc": "2026-11-02T18:32:30+00:00"
+    }
+  },
+  "notes": [
+    "Latency is measured from GitHub runner, not user device.",
+    "Backup country inferred from source label, not independently verified.",
+    "Bypass status is not verified against your network whitelist."
+  ]
+}
