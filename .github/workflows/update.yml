@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
       - name: Install pinned Xray
         shell: bash
         run: |
@@ -35,15 +37,39 @@ jobs:
       - name: Build subscription
         run: python3 update.py
       - name: Publish results
+        env:
+          BRANCH: ${{ github.event.repository.default_branch }}
+        shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add output/subscription.json output/report.json
-          if git diff --cached --quiet; then
-            echo 'No changes'
-          else
+          # Preserve results while updating the local checkout to the latest branch.
+          base=$(git rev-parse HEAD)
+          tmp=$(mktemp -d)
+          cp output/subscription.json output/report.json "$tmp/"
+          for attempt in 1 2 3; do
+            git fetch origin "$BRANCH"
+            remote="origin/$BRANCH"
+            # Never publish results built from stale source or mode settings.
+            if ! git diff --quiet "$base" "$remote" -- settings.json manual.json update.py .github/workflows/update.yml; then
+              echo 'Configuration changed during this run. Please run the newest workflow again.'
+              exit 1
+            fi
+            git reset --hard "$remote"
+            mkdir -p output
+            cp "$tmp/subscription.json" "$tmp/report.json" output/
+            git add output/subscription.json output/report.json
+            if git diff --cached --quiet; then
+              echo 'Results are already up to date.'
+              exit 0
+            fi
             git commit -m 'Update test subscription'
-            git pull --rebase origin "${GITHUB_REF_NAME}"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
+            if git push origin "HEAD:refs/heads/$BRANCH"; then
+              echo 'Subscription published.'
+              exit 0
+            fi
+            echo "Push raced with another change; retry $attempt of 3."
+          done
+          echo 'Could not publish after three attempts; rerun the workflow.'
+          exit 1
