@@ -29,11 +29,11 @@
     },
     {
       "group": "BYPASS",
-      "url": "https://pozor.bond/sub/h29399r90wnq"
+      "url": "https://hub.mos.ru/akelladejavu/bunker/-/raw/main/WHITE_LIST.txt"
     },
     {
       "group": "BYPASS",
-      "url": "https://pozor.bond/sub/vzal49dpeu1f"
+      "url": "https://hub.mos.ru/rkp/sub-roskompozor/raw/main/wl"
     },
     {
       "group": "BYPASS",
@@ -42,6 +42,10 @@
     {
       "group": "BYPASS",
       "url": "https://raw.githubusercontent.com/theakres/VPN/main/bwl"
+    },
+    {
+      "group": "BYPASS",
+      "url": "https://gitverse.ru/api/repos/flaafix/AetrisVPN_white_list_lite/raw/branch/master/AetrisVPN.txt"
     },
     {
       "group": "BACKUP",
