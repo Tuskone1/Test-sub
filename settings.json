@@ -1,0 +1,23 @@
+{
+  "mode": "auto",
+  "schedule_note": "Schedule is configured in .github/workflows/update.yml",
+  "max_per_group": 5,
+  "max_candidates_per_source": 30,
+  "workers": 8,
+  "timeout_seconds": 10,
+  "probe_url": "https://cp.cloudflare.com/generate_204",
+  "sources": [
+    {"group": "DE", "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/DE"},
+    {"group": "FI", "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/FI"},
+    {"group": "SE", "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/SE"},
+    {"group": "NL", "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/NL"},
+    {"group": "US", "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/US"},
+    {"group": "BYPASS", "url": "https://pozor.bond/sub/h29399r90wnq"},
+    {"group": "BYPASS", "url": "https://pozor.bond/sub/vzal49dpeu1f"},
+    {"group": "BYPASS", "url": "https://hub.mos.ru/novacommunity/freeproxynova/-/raw/main/%F0%9F%86%93ProxyNova%20%E2%9D%AF%20%F0%9F%97%BD%F0%9F%95%8A%E2%9C%8A%20%D0%A0%D1%83%D1%87%D0%BD%D0%BE%D0%B9%20%D0%B2%D1%8B%D0%B1%D0%BE%D1%80%20%D0%9E%D0%B1%D1%85%D0%BE%D0%B4%20%D0%91%D0%A1%20%28%D0%A2%D0%B5%D1%81%D1%82%29%20.txt"},
+    {"group": "BYPASS", "url": "https://raw.githubusercontent.com/theakres/VPN/main/bwl"},
+    {"group": "BACKUP", "url": "https://raw.githubusercontent.com/Remiuc0ff/vpn-hiddifycode/refs/heads/main/allhiddifyvpn"},
+    {"group": "BACKUP", "url": "https://gidroksi.fun/black-list"},
+    {"group": "BACKUP", "url": "https://raw.githubusercontent.com/s0ulcoil/HavenVPN/refs/heads/main/Haven"}
+  ]
+}
