@@ -32,10 +32,27 @@ def parse_link(link):
     try:
         u=urllib.parse.urlsplit(link.strip()); q=urllib.parse.parse_qs(u.query, keep_blank_values=True)
         get=lambda k, default='': q.get(k,[default])[0]
-        host=u.hostname; port=u.port
-        if u.scheme not in ('vless','trojan') or not check_address(host) or not port or not 1<=port<=65535 or not u.username: return None
-        credential=urllib.parse.unquote(u.username)
-        if len(credential)>256: return None
+        host=u.hostname; port=u.port or (443 if u.scheme in ('hysteria2','hy2') else None)
+        if u.scheme not in ('vless','trojan','hysteria2','hy2') or not check_address(host) or not port or not 1<=port<=65535 or '@' not in u.netloc: return None
+        credential=urllib.parse.unquote(u.netloc.rsplit('@',1)[0])
+        if not credential or len(credential)>256: return None
+        if u.scheme in ('hysteria2','hy2'):
+            # Do not silently disable verification or ignore features that change connection semantics.
+            if any(get(k,'0').lower() in ('1','true') for k in ('allowInsecure','insecure')): return None
+            if any(get(k) for k in ('pinSHA256','pinsha256','mport','ports','hop-interval','hopInterval')): return None
+            obfs=get('obfs','').lower()
+            if obfs not in ('','salamander'): return None
+            obfs_password=get('obfs-password') or get('obfsPassword')
+            if obfs and not obfs_password: return None
+            sni=get('sni',host)
+            if not sni or len(sni)>253: return None
+            tls={'serverName':sni,'alpn':['h3'],'allowInsecure':False}
+            alpn=get('alpn')
+            if alpn and alpn != 'h3': return None
+            stream={'network':'hysteria','security':'tls','tlsSettings':tls,'hysteriaSettings':{'version':2,'auth':credential}}
+            if obfs: stream['finalmask']={'udp':[{'type':'salamander','settings':{'password':obfs_password}}]}
+            outbound={'protocol':'hysteria','settings':{'version':2,'address':host,'port':port},'streamSettings':stream}
+            return {'outbound':outbound,'priority':1,'label':urllib.parse.unquote(u.fragment)[:256]}
         if u.scheme=='vless' and not re.fullmatch(r'[a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}', credential): return None
         transport=get('type','tcp').lower(); security=get('security','tls' if u.scheme=='trojan' else '').lower()
         if transport not in ('tcp','ws','grpc','xhttp') or security not in ('tls','reality'): return None
@@ -101,7 +118,7 @@ def fetch_source(url):
     return normalize(data)
 
 def out_host(out):
-    st=out['settings']; return (st.get('vnext') or st.get('servers'))[0]['address']
+    st=out['settings']; return st.get('address') or (st.get('vnext') or st.get('servers'))[0]['address']
 
 def alloc_port():
     with socket.socket() as s: s.bind(('127.0.0.1',0)); return s.getsockname()[1]
@@ -184,7 +201,7 @@ def main():
             raw=fetch_source(source['url']); found=[]
             for line in raw.splitlines():
                 line=line.strip()
-                if not line.startswith(('vless://','trojan://')): continue
+                if not line.startswith(('vless://','trojan://','hysteria2://','hy2://')): continue
                 item=parse_link(line)
                 if not item: continue
                 target=inferred_group(item['label']) if group=='BACKUP' else group
@@ -192,9 +209,19 @@ def main():
                 key=hashlib.sha256(json.dumps(item['outbound'],sort_keys=True).encode()).hexdigest()
                 if key in seen[target]: continue
                 found.append((target,key,item))
-            # Randomize candidates so large sources are not permanently biased to the first entries.
-            random.shuffle(found);found.sort(key=lambda x:x[2]['priority'])
-            found=found[:limit]
+            # Reserve test slots for Reality, Hysteria2 and other supported protocols.
+            # Sorting only by Reality here would starve Hysteria in large feeds.
+            random.shuffle(found)
+            reality=[x for x in found if x[2]['priority']==0]
+            hy=[x for x in found if x[2]['outbound']['protocol']=='hysteria']
+            other=[x for x in found if x[2]['priority']!=0 and x[2]['outbound']['protocol']!='hysteria']
+            picked=[]
+            quotas=[(reality,(limit+1)//2),(hy,(limit+2)//4),(other,limit//4)]
+            for pool,quota in quotas:
+                take=pool[:quota];picked.extend(take);del pool[:len(take)]
+            for pool in (reality,hy,other):
+                take=pool[:max(0,limit-len(picked))];picked.extend(take)
+            found=picked[:limit]
             for target,key,item in found:
                 if key not in seen[target]: seen[target].add(key); groups[target].append(item)
             report.update({'status':'ok','candidates_added':len(found)})
@@ -212,13 +239,17 @@ def main():
             except Exception as e: print('Test error:',type(e).__name__,flush=True)
     max_n=max(1,min(int(SETTINGS.get('max_per_group',5)),5)); selected={}; stats={}; now=timestamp()
     for g in ORDER:
-        nodes=sorted(checked[g], key=lambda i:(i['priority'],i['latency_ms']))[:max_n]
+        # First slot is the fastest working VLESS/TCP/Reality, if any.
+        # Remaining slots are the fastest of all protocols, including Hysteria2.
+        ranked=sorted(checked[g], key=lambda i:i['latency_ms'])
+        preferred=next((n for n in ranked if n['priority']==0),None)
+        nodes=(([preferred] if preferred else []) + [n for n in ranked if n is not preferred])[:max_n]
         if nodes: state='fresh'; tested_at=now
         else:
             nodes=previous_nodes(old,NAMES[g]); state='previous' if nodes else 'empty'
             tested_at=(old_report.get('groups',{}).get(g,{}) or {}).get('last_success_utc') if nodes else None
         selected[g]=nodes
-        stats[g]={'status':state,'candidates_tested':len(groups[g]),'passed':len(checked[g]),'selected':len(nodes),'last_success_utc':tested_at}
+        stats[g]={'status':state,'candidates_tested':len(groups[g]),'passed':len(checked[g]),'selected':len(nodes),'hysteria2_tested':sum(x['outbound']['protocol']=='hysteria' for x in groups[g]),'hysteria2_passed':sum(x['outbound']['protocol']=='hysteria' for x in checked[g]),'hysteria2_selected':sum(x['outbound']['protocol']=='hysteria' for x in nodes),'last_success_utc':tested_at}
         print(f"{g}: {state}; passed={len(checked[g])}; selected={len(nodes)}",flush=True)
     profiles=[]; normal=[n for g in ORDER[:-1] for n in selected[g]]
     if normal: profiles.append(profile('🌐 Автовыбор',normal))
