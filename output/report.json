@@ -1,6 +1,6 @@
 {
   "mode": "auto",
-  "updated_utc": "2026-11-02T19:15:22+00:00",
+  "updated_utc": "2026-11-02T19:28:39+00:00",
   "probe_url": "https://cp.cloudflare.com/generate_204",
   "verify_url": "https://www.gstatic.com/generate_204",
   "sources": [
@@ -57,7 +57,7 @@
     {
       "group": "BACKUP",
       "status": "ok",
-      "candidates_added": 8
+      "candidates_added": 9
     },
     {
       "group": "BACKUP",
@@ -66,93 +66,92 @@
     },
     {
       "group": "BACKUP",
-      "status": "ok",
-      "candidates_added": 30
+      "status": "error",
+      "error_type": "URLError"
     }
   ],
   "groups": {
     "DE": {
       "status": "fresh",
-      "candidates_tested": 35,
-      "first_passed": 32,
+      "candidates_tested": 34,
+      "first_passed": 29,
       "passed": 10,
       "selected": 5,
-      "hysteria2_tested": 6,
+      "hysteria2_tested": 5,
       "hysteria2_passed": 4,
-      "hysteria2_selected": 1,
-      "last_success_utc": "2026-11-02T19:15:22+00:00"
+      "hysteria2_selected": 2,
+      "last_success_utc": "2026-11-02T19:28:39+00:00"
     },
     "FI": {
       "status": "fresh",
-      "candidates_tested": 31,
-      "first_passed": 20,
+      "candidates_tested": 30,
+      "first_passed": 25,
       "passed": 9,
       "selected": 5,
       "hysteria2_tested": 6,
-      "hysteria2_passed": 1,
-      "hysteria2_selected": 1,
-      "last_success_utc": "2026-11-02T19:15:22+00:00"
+      "hysteria2_passed": 4,
+      "hysteria2_selected": 2,
+      "last_success_utc": "2026-11-02T19:28:39+00:00"
     },
     "SE": {
       "status": "fresh",
-      "candidates_tested": 14,
+      "candidates_tested": 13,
       "first_passed": 12,
       "passed": 9,
       "selected": 5,
       "hysteria2_tested": 2,
       "hysteria2_passed": 2,
       "hysteria2_selected": 2,
-      "last_success_utc": "2026-11-02T19:15:22+00:00"
+      "last_success_utc": "2026-11-02T19:28:39+00:00"
     },
     "NL": {
       "status": "fresh",
-      "candidates_tested": 46,
-      "first_passed": 36,
+      "candidates_tested": 37,
+      "first_passed": 27,
       "passed": 10,
       "selected": 5,
       "hysteria2_tested": 9,
-      "hysteria2_passed": 2,
-      "hysteria2_selected": 1,
-      "last_success_utc": "2026-11-02T19:15:22+00:00"
+      "hysteria2_passed": 3,
+      "hysteria2_selected": 2,
+      "last_success_utc": "2026-11-02T19:28:39+00:00"
     },
     "US": {
       "status": "fresh",
       "candidates_tested": 35,
-      "first_passed": 31,
-      "passed": 10,
-      "selected": 5,
-      "hysteria2_tested": 10,
-      "hysteria2_passed": 9,
-      "hysteria2_selected": 4,
-      "last_success_utc": "2026-11-02T19:15:22+00:00"
-    },
-    "OTHER": {
-      "status": "fresh",
-      "candidates_tested": 48,
       "first_passed": 32,
       "passed": 10,
       "selected": 5,
-      "hysteria2_tested": 11,
+      "hysteria2_tested": 12,
       "hysteria2_passed": 4,
-      "hysteria2_selected": 1,
-      "last_success_utc": "2026-11-02T19:15:22+00:00"
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-02T19:28:39+00:00"
+    },
+    "OTHER": {
+      "status": "fresh",
+      "candidates_tested": 31,
+      "first_passed": 15,
+      "passed": 10,
+      "selected": 5,
+      "hysteria2_tested": 10,
+      "hysteria2_passed": 7,
+      "hysteria2_selected": 3,
+      "last_success_utc": "2026-11-02T19:28:39+00:00"
     },
     "BYPASS": {
       "status": "fresh",
       "candidates_tested": 66,
-      "first_passed": 27,
-      "passed": 10,
+      "first_passed": 24,
+      "passed": 9,
       "selected": 5,
       "hysteria2_tested": 13,
       "hysteria2_passed": 0,
       "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-02T19:15:22+00:00"
+      "last_success_utc": "2026-11-02T19:28:39+00:00"
     }
   },
   "notes": [
     "Latency is measured from GitHub runner, not user device.",
     "Backup country inferred from source label, not independently verified.",
-    "Bypass status is not verified against your network whitelist.",
-    "Burst and leastLoad profiles are experimental comparisons, not guaranteed improvements."
+    "Bypass status is not verified against your network whitelist."
   ]
 }
