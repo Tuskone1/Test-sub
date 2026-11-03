@@ -1,6 +1,6 @@
 {
   "mode": "auto",
-  "updated_utc": "2026-11-03T01:39:34+00:00",
+  "updated_utc": "2026-11-03T04:23:54+00:00",
   "probe_url": "https://cp.cloudflare.com/generate_204",
   "verify_url": "https://www.gstatic.com/generate_204",
   "sources": [
@@ -17,7 +17,7 @@
     {
       "group": "SE",
       "status": "ok",
-      "candidates_added": 22
+      "candidates_added": 27
     },
     {
       "group": "NL",
@@ -47,12 +47,12 @@
     {
       "group": "BYPASS",
       "status": "ok",
-      "candidates_added": 18
+      "candidates_added": 16
     },
     {
       "group": "BYPASS",
       "status": "ok",
-      "candidates_added": 18
+      "candidates_added": 19
     },
     {
       "group": "BACKUP",
@@ -62,7 +62,7 @@
     {
       "group": "BACKUP",
       "status": "ok",
-      "candidates_added": 22
+      "candidates_added": 30
     },
     {
       "group": "BACKUP",
@@ -78,80 +78,80 @@
   "groups": {
     "DE": {
       "status": "fresh",
-      "candidates_tested": 48,
-      "first_passed": 42,
+      "candidates_tested": 40,
+      "first_passed": 40,
       "passed": 10,
       "selected": 5,
-      "hysteria2_tested": 7,
-      "hysteria2_passed": 4,
-      "hysteria2_selected": 2,
-      "last_success_utc": "2026-11-03T01:39:34+00:00"
+      "hysteria2_tested": 6,
+      "hysteria2_passed": 2,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-03T04:23:54+00:00"
     },
     "FI": {
       "status": "fresh",
       "candidates_tested": 34,
-      "first_passed": 32,
+      "first_passed": 30,
       "passed": 9,
       "selected": 5,
       "hysteria2_tested": 8,
-      "hysteria2_passed": 4,
-      "hysteria2_selected": 3,
-      "last_success_utc": "2026-11-03T01:39:34+00:00"
+      "hysteria2_passed": 6,
+      "hysteria2_selected": 2,
+      "last_success_utc": "2026-11-03T04:23:54+00:00"
     },
     "SE": {
       "status": "fresh",
-      "candidates_tested": 26,
-      "first_passed": 25,
+      "candidates_tested": 31,
+      "first_passed": 29,
       "passed": 10,
       "selected": 5,
-      "hysteria2_tested": 2,
-      "hysteria2_passed": 1,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-03T01:39:34+00:00"
+      "hysteria2_tested": 4,
+      "hysteria2_passed": 3,
+      "hysteria2_selected": 1,
+      "last_success_utc": "2026-11-03T04:23:54+00:00"
     },
     "NL": {
       "status": "fresh",
       "candidates_tested": 43,
-      "first_passed": 42,
+      "first_passed": 40,
       "passed": 10,
       "selected": 5,
       "hysteria2_tested": 9,
-      "hysteria2_passed": 1,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-03T01:39:34+00:00"
+      "hysteria2_passed": 3,
+      "hysteria2_selected": 1,
+      "last_success_utc": "2026-11-03T04:23:54+00:00"
     },
     "US": {
       "status": "fresh",
-      "candidates_tested": 40,
-      "first_passed": 37,
-      "passed": 9,
+      "candidates_tested": 43,
+      "first_passed": 38,
+      "passed": 10,
       "selected": 5,
       "hysteria2_tested": 8,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-03T01:39:34+00:00"
+      "hysteria2_passed": 4,
+      "hysteria2_selected": 1,
+      "last_success_utc": "2026-11-03T04:23:54+00:00"
     },
     "OTHER": {
       "status": "fresh",
-      "candidates_tested": 40,
-      "first_passed": 33,
+      "candidates_tested": 53,
+      "first_passed": 46,
       "passed": 10,
       "selected": 5,
-      "hysteria2_tested": 9,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-03T01:39:34+00:00"
+      "hysteria2_tested": 10,
+      "hysteria2_passed": 4,
+      "hysteria2_selected": 1,
+      "last_success_utc": "2026-11-03T04:23:54+00:00"
     },
     "BYPASS": {
       "status": "fresh",
-      "candidates_tested": 91,
-      "first_passed": 64,
+      "candidates_tested": 92,
+      "first_passed": 57,
       "passed": 10,
       "selected": 5,
       "hysteria2_tested": 4,
-      "hysteria2_passed": 2,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-03T01:39:34+00:00"
+      "hysteria2_passed": 1,
+      "hysteria2_selected": 1,
+      "last_success_utc": "2026-11-03T04:23:54+00:00"
     }
   },
   "notes": [
