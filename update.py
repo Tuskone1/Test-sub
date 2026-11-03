@@ -7,8 +7,16 @@ ROOT = Path(__file__).resolve().parent
 SETTINGS = json.loads((ROOT / 'settings.json').read_text(encoding='utf-8'))
 OUTPUT = ROOT / 'output' / 'subscription.json'
 REPORT = ROOT / 'output' / 'report.json'
-NAMES = {'DE':'🇩🇪 Германия', 'FI':'🇫🇮 Финляндия', 'SE':'🇸🇪 Швеция', 'NL':'🇳🇱 Нидерланды', 'US':'🇺🇸 США', 'OTHER':'🌍 Другие страны', 'BYPASS':'🇪🇺 Обход'}
-ORDER = ['DE','FI','SE','NL','US','OTHER','BYPASS']
+# User's existing five countries plus additional independently labelled feeds.
+NAMES = {
+    'DE':'🇩🇪 Германия', 'FI':'🇫🇮 Финляндия', 'SE':'🇸🇪 Швеция', 'NL':'🇳🇱 Нидерланды', 'US':'🇺🇸 США',
+    'GB':'🇬🇧 Великобритания', 'FR':'🇫🇷 Франция', 'PL':'🇵🇱 Польша', 'CA':'🇨🇦 Канада',
+    'TR':'🇹🇷 Турция', 'ES':'🇪🇸 Испания', 'CZ':'🇨🇿 Чехия', 'CH':'🇨🇭 Швейцария',
+    'AT':'🇦🇹 Австрия', 'NO':'🇳🇴 Норвегия', 'JP':'🇯🇵 Япония', 'BYPASS':'🇪🇺 Обход'
+}
+COUNTRIES = ['DE','FI','SE','NL','US','GB','FR','PL','CA','TR','ES','CZ','CH','AT','NO','JP']
+ORDER = COUNTRIES + ['BYPASS']
+EXTRA_COUNTRIES = COUNTRIES[5:]
 RU_DOMAINS = ['domain:ru','domain:su','domain:xn--p1ai','domain:vk.com','domain:userapi.com','domain:mail.ru','domain:ok.ru','domain:yandex.ru','domain:wink.ru','domain:more.tv','domain:kion.ru','domain:sfera.fm']
 PROBE = SETTINGS.get('probe_url', 'https://cp.cloudflare.com/generate_204')
 
@@ -102,9 +110,26 @@ def safe_target(host):
     except (OSError,ValueError): return False
 
 def inferred_group(label):
-    # A backup's own label is only a hint, not verified geolocation.
+    # Country is inferred solely from provider labels; it is not IP geolocation.
     label=label.lower()
-    patterns={'DE':r'🇩🇪|germany|deutschland|герман|\bde\b', 'FI':r'🇫🇮|finland|финлян|\bfi\b', 'SE':r'🇸🇪|sweden|швеци|\bse\b', 'NL':r'🇳🇱|netherlands|nederland|нидерланд|\bnl\b', 'US':r'🇺🇸|united states|\busa\b|сша|\bus\b'}
+    patterns={
+        'DE':r'🇩🇪|germany|deutschland|герман|\bde\b',
+        'FI':r'🇫🇮|finland|финлян|\bfi\b',
+        'SE':r'🇸🇪|sweden|швец|\bse\b',
+        'NL':r'🇳🇱|netherlands|nederland|нидерланд|\bnl\b',
+        'US':r'🇺🇸|united states|\busa\b|сша|\bus\b',
+        'GB':r'🇬🇧|united kingdom|great britain|britain|england|великобритан|англи|\bgb\b|\buk\b',
+        'FR':r'🇫🇷|france|франци|франц|\bfr\b',
+        'PL':r'🇵🇱|poland|польш|\bpl\b',
+        'CA':r'🇨🇦|canada|канад|\bca\b',
+        'TR':r'🇹🇷|turkey|türkiye|турци|турец|\btr\b',
+        'ES':r'🇪🇸|spain|españa|испани|\bes\b',
+        'CZ':r'🇨🇿|czechia|czech republic|чехи|\bcz\b',
+        'CH':r'🇨🇭|switzerland|швейцар|\bch\b',
+        'AT':r'🇦🇹|austria|австри|\bat\b',
+        'NO':r'🇳🇴|norway|норвег|\bnor\b',
+        'JP':r'🇯🇵|japan|япони|\bjp\b'
+    }
     matches=[k for k,v in patterns.items() if re.search(v,label)]
     return matches[0] if len(matches)==1 else None
 
@@ -232,20 +257,20 @@ def previous_nodes(profiles, name):
 def previous_bypass_nodes(profiles):
     # Accept both the original aggregate and the new numbered groups.
     aggregate=previous_nodes(profiles,NAMES['BYPASS'])
-    if aggregate: return aggregate[:25]
+    if aggregate: return aggregate[:64]
     result=[]; seen=set()
-    for number in range(1,6):
+    for number in range(1,9):
         for item in previous_nodes(profiles,f'🇪🇺 Обход #{number}'):
             key=hashlib.sha256(json.dumps(item['outbound'],sort_keys=True).encode()).hexdigest()
             if key not in seen:
                 seen.add(key); result.append(item)
-    return result[:25]
+    return result[:64]
 
 def split_bypass_groups(nodes):
-    """Make up to five non-overlapping, reasonably balanced groups of <=5."""
+    """Make up to eight non-overlapping, reasonably balanced groups of <=8."""
     if not nodes: return []
-    nodes=nodes[:25]
-    count=min(5,(len(nodes)+4)//5)
+    nodes=nodes[:64]
+    count=min(8,(len(nodes)+7)//8)
     sizes=[len(nodes)//count + (1 if i < len(nodes)%count else 0) for i in range(count)]
     groups=[[] for _ in range(count)]
     pool=list(nodes)
@@ -269,6 +294,11 @@ def main():
     old,old_report=read_previous(); groups={x:[] for x in ORDER}; source_reports=[]; seen={x:set() for x in ORDER}
     limit=max(1,min(int(SETTINGS.get('max_candidates_per_source',30)),100))
     sources=list(SETTINGS['sources'])
+    # Add missing country-labelled public feeds without modifying user's settings.
+    configured={source.get('group') for source in sources}
+    for code in EXTRA_COUNTRIES:
+        if code not in configured:
+            sources.append({'group':code,'url':f'https://raw.githubusercontent.com/theakres/VPN/main/countries/{code}','auto_country':True})
     # Optional URL goes in GitHub Actions secrets, never in this public file.
     if os.environ.get('EXTRA_SOURCE_URL', '').strip():
         sources.append({'group':'BACKUP','url':os.environ['EXTRA_SOURCE_URL'].strip()})
@@ -281,11 +311,12 @@ def main():
                 if not line.startswith(('vless://','trojan://','hysteria2://','hy2://')): continue
                 item=parse_link(line)
                 if not item: continue
-                target=(inferred_group(item['label']) or 'OTHER') if group=='BACKUP' else group
+                target=inferred_group(item['label']) if group=='BACKUP' else group
                 if target not in groups: continue
                 key=hashlib.sha256(json.dumps(item['outbound'],sort_keys=True).encode()).hexdigest()
                 if key in seen[target]: continue
                 found.append((target,key,item))
+            source_limit=min(limit,16) if source.get('auto_country') else limit
             # Reserve test slots for Reality, Hysteria2 and other supported protocols.
             # Sorting only by Reality here would starve Hysteria in large feeds.
             random.shuffle(found)
@@ -293,12 +324,12 @@ def main():
             hy=[x for x in found if x[2]['outbound']['protocol']=='hysteria']
             other=[x for x in found if x[2]['priority']!=0 and x[2]['outbound']['protocol']!='hysteria']
             picked=[]
-            quotas=[(reality,(limit+1)//2),(hy,(limit+2)//4),(other,limit//4)]
+            quotas=[(reality,(source_limit+1)//2),(hy,(source_limit+2)//4),(other,source_limit//4)]
             for pool,quota in quotas:
                 take=pool[:quota];picked.extend(take);del pool[:len(take)]
             for pool in (reality,hy,other):
-                take=pool[:max(0,limit-len(picked))];picked.extend(take)
-            found=picked[:limit]
+                take=pool[:max(0,source_limit-len(picked))];picked.extend(take)
+            found=picked[:source_limit]
             for target,key,item in found:
                 if key not in seen[target]: seen[target].add(key); groups[target].append(item)
             report.update({'status':'ok','candidates_added':len(found)})
@@ -320,9 +351,9 @@ def main():
     finalists=[]
     for group in ORDER:
         ranked=sorted(first_pass[group],key=lambda n:n['latency_ms'])
-        preferred=[n for n in ranked if n['priority']==0][:(5 if group=='BYPASS' else 1)]
+        preferred=[n for n in ranked if n['priority']==0][:(8 if group=='BYPASS' else 1)]
         preferred_ids={id(n) for n in preferred}
-        pool=(preferred + [n for n in ranked if id(n) not in preferred_ids])[:(40 if group=='BYPASS' else 10)]
+        pool=(preferred + [n for n in ranked if id(n) not in preferred_ids])[:(80 if group=='BYPASS' else 15)]
         for item in pool:
             item['first_latency_ms']=item['latency_ms']; finalists.append((group,item))
     verified={x:[] for x in ORDER}
@@ -337,14 +368,14 @@ def main():
                     verified[futs[fut]].append(result)
             except Exception as e: print('Verification error:',type(e).__name__,flush=True)
     checked=verified
-    max_n=max(1,min(int(SETTINGS.get('max_per_group',5)),5)); selected={}; stats={}; now=timestamp()
+    max_n=max(1,min(int(SETTINGS.get('max_per_country',10)),20)); selected={}; stats={}; now=timestamp()
     for g in ORDER:
-        # Reserve up to five Reality nodes for distinct BYPASS groups; all
+        # Reserve up to eight Reality nodes for distinct BYPASS groups; all
         # other positions go to fastest verified nodes of any protocol.
         ranked=sorted(checked[g], key=lambda i:i['latency_ms'])
-        preferred=[n for n in ranked if n['priority']==0][:(5 if g=='BYPASS' else 1)]
+        preferred=[n for n in ranked if n['priority']==0][:(8 if g=='BYPASS' else 1)]
         preferred_ids={id(n) for n in preferred}
-        group_limit=25 if g=='BYPASS' else max_n
+        group_limit=64 if g=='BYPASS' else max_n
         nodes=(preferred + [n for n in ranked if id(n) not in preferred_ids])[:group_limit]
         if nodes: state='fresh'; tested_at=now
         else:
@@ -353,14 +384,14 @@ def main():
         selected[g]=nodes
         stats[g]={'status':state,'candidates_tested':len(groups[g]),'first_passed':len(first_pass[g]),'passed':len(checked[g]),'selected':len(nodes),'hysteria2_tested':sum(x['outbound']['protocol']=='hysteria' for x in groups[g]),'hysteria2_passed':sum(x['outbound']['protocol']=='hysteria' for x in checked[g]),'hysteria2_selected':sum(x['outbound']['protocol']=='hysteria' for x in nodes),'last_success_utc':tested_at}
         print(f"{g}: {state}; passed={len(checked[g])}; selected={len(nodes)}",flush=True)
-    profiles=[]; normal_groups=[(g,selected[g]) for g in ORDER[:-1] if selected[g]]
+    profiles=[]; normal_groups=[(g,selected[g][:4]) for g in COUNTRIES if selected[g]]
     if normal_groups: profiles.append(reference_auto('🇪🇺 Автовыбор',normal_groups))
     for g in ORDER[:-1]:
         if selected[g]: profiles.append(profile(NAMES[g], selected[g]))
     bypass=selected['BYPASS']
     if bypass:
         profiles.append(reference_auto('🇪🇺 Автовыбор Обход',[('BYPASS',bypass)]))
-        # Each profile has its own disjoint group of up to five servers.
+        # Each profile has its own disjoint group of up to eight servers.
         for idx, group in enumerate(split_bypass_groups(bypass), 1):
             profiles.append(profile(f'🇪🇺 Обход #{idx}',group))
     if not profiles:
@@ -368,6 +399,6 @@ def main():
         save(REPORT,{'mode':'auto','updated_utc':now,'status':'no_working_servers','sources':source_reports,'groups':stats})
         if not OUTPUT.exists(): save(OUTPUT,[])
         return
-    save(OUTPUT,profiles); save(REPORT,{'mode':'auto','updated_utc':now,'probe_url':PROBE,'verify_url':verify_url,'sources':source_reports,'groups':stats, 'notes':['Latency is measured from GitHub runner, not user device.','Backup country inferred from source label, not independently verified.','Bypass status is not verified against your network whitelist.']})
+    save(OUTPUT,profiles); save(REPORT,{'mode':'auto','updated_utc':now,'probe_url':PROBE,'verify_url':verify_url,'sources':source_reports,'groups':stats, 'notes':['Latency is measured from GitHub runner, not user device.','Country labels come from sources and are not independently verified.','Bypass status is not verified against your network whitelist.']})
 
 if __name__=='__main__': main()
