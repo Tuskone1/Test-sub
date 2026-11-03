@@ -229,6 +229,34 @@ def previous_nodes(profiles, name):
             return [{'outbound':{k:copy.deepcopy(v) for k,v in o.items() if k!='tag'}, 'priority':0 if o.get('protocol')=='vless' and o.get('streamSettings',{}).get('security')=='reality' and o.get('streamSettings',{}).get('network')=='tcp' else 1} for o in p.get('outbounds',[]) if o.get('tag','').startswith('node-')]
     return []
 
+def previous_bypass_nodes(profiles):
+    # Accept both the original aggregate and the new numbered groups.
+    aggregate=previous_nodes(profiles,NAMES['BYPASS'])
+    if aggregate: return aggregate[:25]
+    result=[]; seen=set()
+    for number in range(1,6):
+        for item in previous_nodes(profiles,f'🇪🇺 Обход #{number}'):
+            key=hashlib.sha256(json.dumps(item['outbound'],sort_keys=True).encode()).hexdigest()
+            if key not in seen:
+                seen.add(key); result.append(item)
+    return result[:25]
+
+def split_bypass_groups(nodes):
+    """Make up to five non-overlapping, reasonably balanced groups of <=5."""
+    if not nodes: return []
+    nodes=nodes[:25]
+    count=min(5,(len(nodes)+4)//5)
+    sizes=[len(nodes)//count + (1 if i < len(nodes)%count else 0) for i in range(count)]
+    groups=[[] for _ in range(count)]
+    pool=list(nodes)
+    # Put a VLESS/TCP/Reality node first in each group when possible.
+    for group in groups:
+        idx=next((i for i,n in enumerate(pool) if n.get('priority')==0),None)
+        if idx is not None: group.append(pool.pop(idx))
+    for i,group in enumerate(groups):
+        while len(group)<sizes[i] and pool: group.append(pool.pop(0))
+    return groups
+
 def main():
     OUTPUT.parent.mkdir(parents=True,exist_ok=True)
     if SETTINGS.get('mode')=='manual':
@@ -292,8 +320,9 @@ def main():
     finalists=[]
     for group in ORDER:
         ranked=sorted(first_pass[group],key=lambda n:n['latency_ms'])
-        preferred=next((n for n in ranked if n['priority']==0),None)
-        pool=(([preferred] if preferred else []) + [n for n in ranked if n is not preferred])[:10]
+        preferred=[n for n in ranked if n['priority']==0][:(5 if group=='BYPASS' else 1)]
+        preferred_ids={id(n) for n in preferred}
+        pool=(preferred + [n for n in ranked if id(n) not in preferred_ids])[:(40 if group=='BYPASS' else 10)]
         for item in pool:
             item['first_latency_ms']=item['latency_ms']; finalists.append((group,item))
     verified={x:[] for x in ORDER}
@@ -310,14 +339,16 @@ def main():
     checked=verified
     max_n=max(1,min(int(SETTINGS.get('max_per_group',5)),5)); selected={}; stats={}; now=timestamp()
     for g in ORDER:
-        # First slot is the fastest working VLESS/TCP/Reality, if any.
-        # Remaining slots are the fastest of all protocols, including Hysteria2.
+        # Reserve up to five Reality nodes for distinct BYPASS groups; all
+        # other positions go to fastest verified nodes of any protocol.
         ranked=sorted(checked[g], key=lambda i:i['latency_ms'])
-        preferred=next((n for n in ranked if n['priority']==0),None)
-        nodes=(([preferred] if preferred else []) + [n for n in ranked if n is not preferred])[:max_n]
+        preferred=[n for n in ranked if n['priority']==0][:(5 if g=='BYPASS' else 1)]
+        preferred_ids={id(n) for n in preferred}
+        group_limit=25 if g=='BYPASS' else max_n
+        nodes=(preferred + [n for n in ranked if id(n) not in preferred_ids])[:group_limit]
         if nodes: state='fresh'; tested_at=now
         else:
-            nodes=previous_nodes(old,NAMES[g]); state='previous' if nodes else 'empty'
+            nodes=previous_bypass_nodes(old) if g=='BYPASS' else previous_nodes(old,NAMES[g]); state='previous' if nodes else 'empty'
             tested_at=(old_report.get('groups',{}).get(g,{}) or {}).get('last_success_utc') if nodes else None
         selected[g]=nodes
         stats[g]={'status':state,'candidates_tested':len(groups[g]),'first_passed':len(first_pass[g]),'passed':len(checked[g]),'selected':len(nodes),'hysteria2_tested':sum(x['outbound']['protocol']=='hysteria' for x in groups[g]),'hysteria2_passed':sum(x['outbound']['protocol']=='hysteria' for x in checked[g]),'hysteria2_selected':sum(x['outbound']['protocol']=='hysteria' for x in nodes),'last_success_utc':tested_at}
@@ -329,8 +360,9 @@ def main():
     bypass=selected['BYPASS']
     if bypass:
         profiles.append(reference_auto('🇪🇺 Автовыбор Обход',[('BYPASS',bypass)]))
-        profiles.append(profile(NAMES['BYPASS'],bypass)) # stores all nodes for future fallback
-        for idx,node in enumerate(bypass,1): profiles.append(profile(f'🇪🇺 Обход #{idx}',[node]))
+        # Each profile has its own disjoint group of up to five servers.
+        for idx, group in enumerate(split_bypass_groups(bypass), 1):
+            profiles.append(profile(f'🇪🇺 Обход #{idx}',group))
     if not profiles:
         print('No working servers and no previous profiles: output unchanged.',flush=True)
         save(REPORT,{'mode':'auto','updated_utc':now,'status':'no_working_servers','sources':source_reports,'groups':stats})
