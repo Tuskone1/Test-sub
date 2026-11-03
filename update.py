@@ -12,12 +12,20 @@ NAMES = {
     'DE':'🇩🇪 Германия', 'FI':'🇫🇮 Финляндия', 'SE':'🇸🇪 Швеция', 'NL':'🇳🇱 Нидерланды', 'US':'🇺🇸 США',
     'GB':'🇬🇧 Великобритания', 'FR':'🇫🇷 Франция', 'PL':'🇵🇱 Польша', 'CA':'🇨🇦 Канада',
     'TR':'🇹🇷 Турция', 'ES':'🇪🇸 Испания', 'CZ':'🇨🇿 Чехия', 'CH':'🇨🇭 Швейцария',
-    'AT':'🇦🇹 Австрия', 'NO':'🇳🇴 Норвегия', 'JP':'🇯🇵 Япония', 'BYPASS':'🇪🇺 Обход'
+    'AT':'🇦🇹 Австрия', 'NO':'🇳🇴 Норвегия', 'JP':'🇯🇵 Япония',
+    'RU':'🇷🇺 Россия', 'HK':'🇭🇰 Гонконг', 'SG':'🇸🇬 Сингапур', 'BR':'🇧🇷 Бразилия',
+    'MD':'🇲🇩 Молдова', 'UA':'🇺🇦 Украина', 'BY':'🇧🇾 Беларусь', 'IN':'🇮🇳 Индия',
+    'LT':'🇱🇹 Литва', 'RO':'🇷🇴 Румыния', 'RS':'🇷🇸 Сербия', 'UZ':'🇺🇿 Узбекистан', 'BYPASS':'🇪🇺 Обход'
 }
-COUNTRIES = ['DE','FI','SE','NL','US','GB','FR','PL','CA','TR','ES','CZ','CH','AT','NO','JP']
+COUNTRIES = ['DE','FI','SE','NL','US','GB','FR','PL','CA','TR','ES','CZ','CH','AT','NO','JP','RU','HK','SG','BR','MD','UA','BY','IN','LT','RO','RS','UZ']
 ORDER = COUNTRIES + ['BYPASS']
-EXTRA_COUNTRIES = COUNTRIES[5:]
+EXTRA_COUNTRIES = COUNTRIES[5:16]
 RU_DOMAINS = ['domain:ru','domain:su','domain:xn--p1ai','domain:vk.com','domain:userapi.com','domain:mail.ru','domain:ok.ru','domain:yandex.ru','domain:wink.ru','domain:more.tv','domain:kion.ru','domain:sfera.fm']
+JSON_SOURCE_URLS = [
+    'https://raw.githubusercontent.com/gooseteam-hackers/freevpn-cracks/refs/heads/main/subscription_auto.txt',
+    'https://pozor.bond/sub/aeryxvpn',
+    'https://pozor.bond/sub/9xnb9v67465y'
+]
 PROBE = SETTINGS.get('probe_url', 'https://cp.cloudflare.com/generate_204')
 
 def timestamp(): return datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
@@ -30,6 +38,7 @@ def check_address(host):
     except ValueError: return bool(re.fullmatch(r'[A-Za-z0-9.-]+', host))
 def normalize(src):
     text=src.decode('utf-8-sig', errors='replace').strip()
+    if text.startswith(('[','{')): return text
     if '://' not in text[:10000]:
         try: text=base64.urlsafe_b64decode(text + '='*((-len(text))%4)).decode('utf-8-sig', errors='replace')
         except Exception: return ''
@@ -128,10 +137,185 @@ def inferred_group(label):
         'CH':r'🇨🇭|switzerland|швейцар|\bch\b',
         'AT':r'🇦🇹|austria|австри|\bat\b',
         'NO':r'🇳🇴|norway|норвег|\bnor\b',
-        'JP':r'🇯🇵|japan|япони|\bjp\b'
+        'JP':r'🇯🇵|japan|япони|\bjp\b',
+        'RU':r'🇷🇺|russia|росси|\bru\b', 'HK':r'🇭🇰|hong kong|гонконг|\bhk\b',
+        'SG':r'🇸🇬|singapore|сингапур|\bsg\b', 'BR':r'🇧🇷|brazil|бразили|\bbr\b',
+        'MD':r'🇲🇩|moldova|молдов|\bmd\b', 'UA':r'🇺🇦|ukraine|украин|\bua\b',
+        'BY':r'🇧🇾|belarus|беларус|белорус', 'IN':r'🇮🇳|india|инди|\bind\b',
+        'LT':r'🇱🇹|lithuania|литв|\blt\b', 'RO':r'🇷🇴|romania|румыни|\bro\b',
+        'RS':r'🇷🇸|serbia|серби|\brs\b', 'UZ':r'🇺🇿|uzbekistan|узбекист|\buz\b'
     }
     matches=[k for k,v in patterns.items() if re.search(v,label)]
     return matches[0] if len(matches)==1 else None
+
+def unambiguous_json_country(label):
+    """Do not pretend inconsistent country labels are verified locations."""
+    labels=re.findall(r'[🇦-🇿]{2}',label)
+    if len(set(labels))>1: return None
+    flag_code=None
+    if labels:
+        flag_code=''.join(chr(ord(ch)-0x1F1E6+ord('A')) for ch in labels[0])
+    bracket_codes=re.findall(r'\[([A-Za-z]{2})\]',label)
+    code=None
+    if bracket_codes:
+        raw=bracket_codes[0].upper()
+        code={'UK':'GB','SW':'SE','TK':'TR','BL':'BE'}.get(raw,raw)
+    # An unsupported or conflicting flag/code is never guessed into a country.
+    if code and flag_code and code != flag_code: return None
+    if code: return code if code in COUNTRIES else None
+    if flag_code: return flag_code if flag_code in COUNTRIES else None
+    return inferred_group(label)
+
+def safe_sockopt(value):
+    if value is None: return None
+    if not isinstance(value,dict) or set(value)-{'domainStrategy','tcpKeepAliveIdle','tcpKeepAliveInterval','tcpNoDelay'}:
+        raise ValueError('unsupported socket options')
+    if len(json.dumps(value))>1024: raise ValueError('socket options too large')
+    return copy.deepcopy(value)
+
+def parse_xray_vless(outbound, label):
+    """Extract a safe, supported single VLESS outbound; never run input JSON."""
+    try:
+        if not isinstance(outbound,dict) or outbound.get('protocol')!='vless': return None
+        if set(outbound)-{'tag','protocol','settings','streamSettings','mux'}: return None
+        if (outbound.get('mux') or {}).get('enabled',False): return None
+        settings=outbound['settings']
+        if set(settings)-{'vnext'} or len(settings.get('vnext',[]))!=1: return None
+        next_hop=settings['vnext'][0]
+        if set(next_hop)-{'address','port','users'} or len(next_hop.get('users',[]))!=1: return None
+        host=next_hop['address'];port=next_hop['port'];user=next_hop['users'][0]
+        if not isinstance(host,str) or not check_address(host) or not isinstance(port,int) or not 1<=port<=65535: return None
+        if set(user)-{'id','encryption','flow','level','security'}: return None
+        uuid=user.get('id','')
+        if not isinstance(uuid,str) or not re.fullmatch(r'[a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}',uuid): return None
+        if user.get('encryption','none') not in ('','none'): return None
+        if user.get('security','auto') not in ('','auto','none'): return None
+        new_user={'id':uuid,'encryption':'none'}
+        if user.get('flow'): new_user['flow']=user['flow']
+        stream=outbound['streamSettings']
+        allowed={'network','security','tlsSettings','realitySettings','xhttpSettings','wsSettings','grpcSettings','tcpSettings','finalmask','sockopt'}
+        if set(stream)-allowed: return None
+        network=stream.get('network','tcp');network='tcp' if network=='raw' else network
+        security=stream.get('security')
+        if network not in ('tcp','ws','grpc','xhttp') or security not in ('tls','reality'): return None
+        output={'network':network,'security':security}
+        sockopt=safe_sockopt(stream.get('sockopt'))
+        if sockopt is not None: output['sockopt']=sockopt
+        src_tls=stream.get('tlsSettings',{}) if security=='tls' else stream.get('realitySettings',{})
+        if not isinstance(src_tls,dict): return None
+        tls_keys={'serverName','fingerprint','alpn','show','allowInsecure'} if security=='tls' else {'serverName','fingerprint','publicKey','shortId','spiderX','show','mldsa65Verify'}
+        if set(src_tls)-tls_keys or src_tls.get('allowInsecure') not in (None,False): return None
+        if security=='reality' and not src_tls.get('publicKey'): return None
+        safe_tls={k:copy.deepcopy(v) for k,v in src_tls.items() if k in tls_keys-{'show','allowInsecure'}}
+        if security=='tls': safe_tls['allowInsecure']=False
+        output['tlsSettings' if security=='tls' else 'realitySettings']=safe_tls
+        transport_keys={'tcp':('tcpSettings',{'header'}),'ws':('wsSettings',{'path','headers'}),
+                        'grpc':('grpcSettings',{'serviceName','multiMode','authority'}),
+                        'xhttp':('xhttpSettings',{'path','host','mode','extra','scMaxEachPostBytes','scMaxConcurrentPosts','scMinPostsIntervalMs','xPaddingBytes','noGRPCHeader'})}
+        key, permitted=transport_keys[network];opts=stream.get(key,{})
+        if not isinstance(opts,dict) or set(opts)-permitted: return None
+        if network=='tcp' and opts.get('header',{}).get('type','none')!='none': return None
+        if network=='ws' and set(opts.get('headers',{})) - {'Host','host'}: return None
+        if network=='xhttp':
+            extra=opts.get('extra',{})
+            if not isinstance(extra,dict): return None
+            if set(extra)-{'scMaxEachPostBytes','scMaxConcurrentPosts','scMinPostsIntervalMs','xPaddingBytes','noGRPCHeader','xmux','noSSEHeader','mode'}: return None
+            if len(json.dumps(extra))>4096: return None
+        if opts: output[key]=copy.deepcopy(opts)
+        mask=stream.get('finalmask')
+        if mask is not None:
+            if not isinstance(mask,dict) or set(mask)-{'tcp'}: return None
+            entries=mask.get('tcp',[])
+            if not isinstance(entries,list) or len(entries)>3: return None
+            for entry in entries:
+                if not isinstance(entry,dict) or set(entry)-{'type','settings'} or entry.get('type')!='fragment': return None
+                fragment=entry.get('settings',{})
+                if not isinstance(fragment,dict) or set(fragment)-{'delay','length','packets','maxSplit'}: return None
+                if any(not isinstance(v,(str,int,float)) or isinstance(v,bool) for v in fragment.values()): return None
+            output['finalmask']=copy.deepcopy(mask)
+        safe={'protocol':'vless','settings':{'vnext':[{'address':host,'port':port,'users':[new_user]}]},'streamSettings':output,'mux':{'enabled':False}}
+        return {'outbound':safe,'priority':0 if network=='tcp' and security=='reality' else 1,'label':str(label)[:256]}
+    except (KeyError,TypeError,ValueError,AttributeError): return None
+
+def parse_xray_trojan(outbound, label):
+    try:
+        if not isinstance(outbound,dict) or outbound.get('protocol')!='trojan': return None
+        settings=outbound['settings']; servers=settings['servers']
+        if set(settings)-{'servers'} or not isinstance(servers,list) or len(servers)!=1: return None
+        server=servers[0]
+        if set(server)-{'address','port','password'}: return None
+        password=server.get('password')
+        if not isinstance(password,str) or not password or len(password)>256: return None
+        # Reuse the strict stream parser with a dummy UUID; do not execute source JSON.
+        dummy=copy.deepcopy(outbound); dummy['protocol']='vless'
+        dummy['settings']={'vnext':[{'address':server['address'],'port':server['port'],'users':[{'id':'00000000-0000-4000-8000-000000000001','encryption':'none'}]}]}
+        item=parse_xray_vless(dummy,label)
+        if not item: return None
+        item['outbound']['protocol']='trojan'
+        item['outbound']['settings']={'servers':[{'address':server['address'],'port':server['port'],'password':password}]}
+        item['priority']=1
+        return item
+    except (KeyError,TypeError,ValueError): return None
+
+def parse_xray_hysteria(outbound, label):
+    try:
+        if not isinstance(outbound,dict) or outbound.get('protocol')!='hysteria': return None
+        if set(outbound)-{'tag','protocol','settings','streamSettings','mux'}: return None
+        if (outbound.get('mux') or {}).get('enabled',False): return None
+        st=outbound['settings']; stream=outbound['streamSettings']
+        if set(st)-{'version','address','port'} or st.get('version')!=2: return None
+        host=st.get('address');port=st.get('port')
+        if not isinstance(host,str) or not check_address(host) or not isinstance(port,int) or not 1<=port<=65535: return None
+        if set(stream)-{'network','method','security','tlsSettings','hysteriaSettings','sockopt','finalmask'}: return None
+        if stream.get('network',stream.get('method'))!='hysteria' or stream.get('method','hysteria')!='hysteria' or stream.get('security')!='tls': return None
+        h=stream.get('hysteriaSettings',{})
+        if not isinstance(h,dict) or set(h)-{'version','auth'} or h.get('version')!=2: return None
+        auth=h.get('auth')
+        if not isinstance(auth,str) or not auth or len(auth)>256: return None
+        tls=stream.get('tlsSettings',{})
+        if not isinstance(tls,dict) or set(tls)-{'serverName','fingerprint','alpn','allowInsecure','enableSessionResumption'}: return None
+        if tls.get('allowInsecure') not in (None,False): return None
+        if tls.get('alpn') and tls['alpn']!=['h3']: return None
+        safe_tls=copy.deepcopy(tls);safe_tls['allowInsecure']=False;safe_tls.setdefault('alpn',['h3'])
+        transport={'network':'hysteria','security':'tls','tlsSettings':safe_tls,'hysteriaSettings':{'version':2,'auth':auth}}
+        sockopt=safe_sockopt(stream.get('sockopt'))
+        if sockopt is not None: transport['sockopt']=sockopt
+        mask=stream.get('finalmask')
+        if mask is not None:
+            if not isinstance(mask,dict) or set(mask)-{'udp'} or not isinstance(mask.get('udp'),list) or len(mask['udp'])>3: return None
+            for entry in mask['udp']:
+                if not isinstance(entry,dict) or set(entry)-{'type','settings'} or entry.get('type')!='salamander': return None
+                obfs=entry.get('settings',{})
+                if not isinstance(obfs,dict) or set(obfs)-{'password'} or not isinstance(obfs.get('password'),str) or len(obfs['password'])>256: return None
+            transport['finalmask']=copy.deepcopy(mask)
+        safe={'protocol':'hysteria','settings':{'version':2,'address':host,'port':port},'streamSettings':transport}
+        return {'outbound':safe,'priority':1,'label':str(label)[:256]}
+    except (KeyError,TypeError,ValueError,AttributeError): return None
+
+def parse_xray_json_source(raw):
+    """Extract supported outbounds from country and LTE profiles only."""
+    try:
+        data=json.loads(raw)
+        if not isinstance(data,list) or len(data)>2000: return []
+        result=[]
+        for entry in data:
+            if not isinstance(entry,dict): continue
+            name=entry.get('remarks','')
+            if not isinstance(name,str) or 'автовыбор' in name.lower() or len(name)>512: continue
+            target='BYPASS' if re.search(r'(?i)\blte\b|обход\s+глушилок',name) else unambiguous_json_country(name)
+            if target not in ORDER: continue
+            nodes=entry.get('outbounds',[])
+            if not isinstance(nodes,list) or len(nodes)>300: continue
+            for outbound in nodes:
+                if not isinstance(outbound,dict): continue
+                proto=outbound.get('protocol')
+                if proto=='vless': item=parse_xray_vless(outbound,name)
+                elif proto=='trojan': item=parse_xray_trojan(outbound,name)
+                elif proto=='hysteria': item=parse_xray_hysteria(outbound,name)
+                else: continue
+                if item: result.append((target,item))
+        return result
+    except (ValueError,TypeError,AttributeError,RecursionError): return []
 
 def fetch_source(url):
     if not url.startswith('https://'): raise ValueError('HTTPS required')
@@ -294,29 +478,40 @@ def main():
     old,old_report=read_previous(); groups={x:[] for x in ORDER}; source_reports=[]; seen={x:set() for x in ORDER}
     limit=max(1,min(int(SETTINGS.get('max_candidates_per_source',30)),100))
     sources=list(SETTINGS['sources'])
+    # Add these public JSON sources only if not already explicitly configured.
+    configured_urls={source.get('url','').split('?',1)[0] for source in sources}
+    for url in JSON_SOURCE_URLS:
+        if url not in configured_urls: sources.append({'group':'JSON','url':url})
     # Add missing country-labelled public feeds without modifying user's settings.
     configured={source.get('group') for source in sources}
     for code in EXTRA_COUNTRIES:
         if code not in configured:
             sources.append({'group':code,'url':f'https://raw.githubusercontent.com/theakres/VPN/main/countries/{code}','auto_country':True})
     # Optional URL goes in GitHub Actions secrets, never in this public file.
-    if os.environ.get('EXTRA_SOURCE_URL', '').strip():
-        sources.append({'group':'BACKUP','url':os.environ['EXTRA_SOURCE_URL'].strip()})
+    extra=os.environ.get('EXTRA_SOURCE_URL','').strip()
+    if extra and not any(source.get('url')==extra for source in sources):
+        sources.append({'group':'BACKUP','url':extra})
     for source in sources:
         group=source['group']; report={'group':group}
         try:
             raw=fetch_source(source['url']); found=[]
-            for line in raw.splitlines():
-                line=line.strip()
-                if not line.startswith(('vless://','trojan://','hysteria2://','hy2://')): continue
-                item=parse_link(line)
-                if not item: continue
-                target=inferred_group(item['label']) if group=='BACKUP' else group
+            if source['url'].split('?',1)[0] in JSON_SOURCE_URLS:
+                candidates=parse_xray_json_source(raw)
+            else:
+                candidates=[]
+                for line in raw.splitlines():
+                    line=line.strip()
+                    if not line.startswith(('vless://','trojan://','hysteria2://','hy2://')): continue
+                    item=parse_link(line)
+                    if not item: continue
+                    target=inferred_group(item['label']) if group=='BACKUP' else group
+                    candidates.append((target,item))
+            for target,item in candidates:
                 if target not in groups: continue
                 key=hashlib.sha256(json.dumps(item['outbound'],sort_keys=True).encode()).hexdigest()
                 if key in seen[target]: continue
                 found.append((target,key,item))
-            source_limit=min(limit,16) if source.get('auto_country') else limit
+            source_limit=min(limit,16) if source.get('auto_country') else (min(limit*3,100) if source['url'].split('?',1)[0] in JSON_SOURCE_URLS else limit)
             # Reserve test slots for Reality, Hysteria2 and other supported protocols.
             # Sorting only by Reality here would starve Hysteria in large feeds.
             random.shuffle(found)

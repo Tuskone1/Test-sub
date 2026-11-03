@@ -66,7 +66,75 @@
     {
       "group": "BACKUP",
       "url": "https://sub.vlessfo.ru/vlessforu/working_configs.txt"
+    },
+    {
+      "group": "GB",
+      "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/GB",
+      "auto_country": true
+    },
+    {
+      "group": "FR",
+      "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/FR",
+      "auto_country": true
+    },
+    {
+      "group": "PL",
+      "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/PL",
+      "auto_country": true
+    },
+    {
+      "group": "CA",
+      "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/CA",
+      "auto_country": true
+    },
+    {
+      "group": "TR",
+      "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/TR",
+      "auto_country": true
+    },
+    {
+      "group": "ES",
+      "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/ES",
+      "auto_country": true
+    },
+    {
+      "group": "CZ",
+      "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/CZ",
+      "auto_country": true
+    },
+    {
+      "group": "CH",
+      "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/CH",
+      "auto_country": true
+    },
+    {
+      "group": "AT",
+      "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/AT",
+      "auto_country": true
+    },
+    {
+      "group": "NO",
+      "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/NO",
+      "auto_country": true
+    },
+    {
+      "group": "JP",
+      "url": "https://raw.githubusercontent.com/theakres/VPN/main/countries/JP",
+      "auto_country": true
+    },
+    {
+      "group": "JSON",
+      "url": "https://raw.githubusercontent.com/gooseteam-hackers/freevpn-cracks/refs/heads/main/subscription_auto.txt"
+    },
+    {
+      "group": "JSON",
+      "url": "https://pozor.bond/sub/aeryxvpn"
+    },
+    {
+      "group": "JSON",
+      "url": "https://pozor.bond/sub/9xnb9v67465y"
     }
   ],
-  "verify_url": "https://www.gstatic.com/generate_204"
+  "verify_url": "https://www.gstatic.com/generate_204",
+  "max_per_country": 10
 }
