@@ -61,6 +61,10 @@
     },
     {
       "group": "BACKUP",
+      "url": "https://gitverse.ru/api/repos/Pizduk/PizdukVPN/raw/branch/master/sub.txt"
+    },
+    {
+      "group": "BACKUP",
       "url": "https://sub.vlessfo.ru/vlessforu/working_configs.txt"
     }
   ],
