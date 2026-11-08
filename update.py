@@ -596,4 +596,89 @@ def main():
         return
     save(OUTPUT,profiles); save(REPORT,{'mode':'auto','updated_utc':now,'probe_url':PROBE,'verify_url':verify_url,'sources':source_reports,'groups':stats, 'notes':['Latency is measured from GitHub runner, not user device.','Country labels come from sources and are not independently verified.','Bypass status is not verified against your network whitelist.']})
 
-if __name__=='__main__': main()
+# Experimental Happ metadata is written to a separate file. The original
+# subscription.json remains valid JSON and is not modified by this step.
+def create_happ_subscription():
+    title = 'Tuskone VPN FREE'
+    announcement = ('Работоспособность конфигураций зависит от вашей сети и не гарантируется. '
+                    'Если сервер не подключается, попробуйте другой.')
+    if len(title) > 25 or len(announcement) > 200:
+        raise ValueError('Happ title or announcement exceeds the documented limit')
+    original = OUTPUT.read_bytes()
+    if not isinstance(json.loads(original.decode('utf-8-sig')), list):
+        raise ValueError('subscription.json must contain a JSON array')
+    encoded = base64.b64encode(announcement.encode('utf-8')).decode('ascii')
+    header = f'#profile-title: {title}\n#announce: base64:{encoded}\n'.encode('utf-8')
+    destination = ROOT / 'output' / 'subscription-happ.txt'
+    tmp = destination.with_suffix('.tmp')
+    try:
+        tmp.write_bytes(header + original)
+        os.replace(tmp, destination)
+    finally:
+        tmp.unlink(missing_ok=True)
+    print('Created experimental output/subscription-happ.txt', flush=True)
+
+LIMITS = {'🇪🇺 Автовыбор': 32, '🇪🇺 Автовыбор Обход': 16}
+
+
+def reduce_auto(profile, limit):
+    """Handle only the known generator format; leave unfamiliar profiles untouched."""
+    outs = profile.get('outbounds', [])
+    routing = profile.get('routing', {})
+    burst = profile.get('burstObservatory', {})
+    balancers = routing.get('balancers', [])
+    if not isinstance(outs, list) or len(balancers) != 1 or not isinstance(burst, dict):
+        return False
+    balancer = balancers[0]
+    selectors = balancer.get('selector')
+    subjects = burst.get('subjectSelector')
+    if not isinstance(selectors, list) or not selectors or subjects != selectors:
+        return False
+    tags = [o.get('tag') for o in outs if isinstance(o, dict) and o.get('tag') in selectors]
+    if len(tags) != len(selectors) or set(tags) != set(selectors) or len(set(tags)) != len(tags):
+        return False
+    # Guard against deleting a node used directly by a rule or as a proxy chain.
+    if any(r.get('outboundTag') in tags for r in routing.get('rules', []) if isinstance(r, dict)):
+        return False
+    if any(o.get('proxySettings') or o.get('streamSettings', {}).get('sockopt', {}).get('dialerProxy')
+           for o in outs if isinstance(o, dict)):
+        return False
+    if len(tags) <= limit:
+        return False
+    # One node from each country first, then one more per country in turn.
+    # For the bypass profile all tags form one group, so its first 16 are kept.
+    groups = {}
+    for tag in tags:
+        group = re.sub(r' \d+$', '', tag)
+        groups.setdefault(group, []).append(tag)
+    chosen = []
+    while len(chosen) < limit and any(groups.values()):
+        for group in groups.values():
+            if group and len(chosen) < limit:
+                chosen.append(group.pop(0))
+    keep = set(chosen)
+    profile['outbounds'] = [o for o in outs if o.get('tag') not in tags or o.get('tag') in keep]
+    balancer['selector'] = chosen
+    if balancer.get('fallbackTag') not in keep:
+        balancer['fallbackTag'] = chosen[0]
+    burst['subjectSelector'] = chosen
+    return True
+
+
+
+def create_optimized_subscription():
+    original = json.loads(OUTPUT.read_text(encoding='utf-8-sig'))
+    if not isinstance(original, list) or not all(isinstance(x, dict) for x in original):
+        raise ValueError('subscription.json must be an array of Xray profile objects')
+    result = copy.deepcopy(original)
+    for item in result:
+        name = item.get('remarks')
+        if name in LIMITS and reduce_auto(item, LIMITS[name]):
+            print(f'{name}: limited automatic pool to {LIMITS[name]} nodes', flush=True)
+    save(ROOT / 'output' / 'subscription-optimized.json', result)
+    print(f'Created experimental optimized JSON: {len(result)} profiles', flush=True)
+
+if __name__=='__main__':
+    main()
+    create_happ_subscription()
+    create_optimized_subscription()
