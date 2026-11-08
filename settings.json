@@ -45,6 +45,10 @@
     },
     {
       "group": "BYPASS",
+      "url": "https://gitverse.ru/api/repos/Pizduk/PizdukVPN/raw/branch/master/WlSubPiz.txt"
+    },
+    {
+      "group": "BYPASS",
       "url": "https://gitverse.ru/api/repos/flaafix/AetrisVPN_white_list_lite/raw/branch/master/AetrisVPN.txt"
     },
     {
@@ -53,7 +57,15 @@
     },
     {
       "group": "BACKUP",
+      "url": "https://is.wepogp.gay/bypass-hwid-lock-3z5O6BFAaJQzGlamvtSo?payload=LoWcw85kRd%2BHRAuaIWWTGaHlqIHCzpm8J09GWd0zeNMb%2BUDgv4dboD2VwU438QTP4MnqUeC52Cr1%2BwMypBkx2PeUWfpWpdOUvOeNWrBgAX98qiT06gURdNejXhujIa0P"
+    },
+    {
+      "group": "BACKUP",
       "url": "https://gidroksi.fun/black-list"
+    },
+    {
+      "group": "BACKUP",
+      "url": "https://free.vpn-from-kirill.workers.dev/"
     },
     {
       "group": "BACKUP",
