@@ -35,8 +35,6 @@ jobs:
           echo 'XRAY_LOCATION_ASSET=/tmp/xray-bin' >> "$GITHUB_ENV"
           rm xray.zip
       - name: Build subscription
-        env:
-          EXTRA_SOURCE_URL: ${{ secrets.EXTRA_SOURCE_URL }}
         run: python3 update.py
       - name: Publish results
         env:
