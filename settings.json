@@ -165,6 +165,10 @@
     {
       "group": "JSON",
       "url": "https://pozor.bond/sub/9xnb9v67465y"
+    },
+    {
+      "group": "MIXED",
+      "url": "https://gitverse.ru/api/repos/vansfenix/vpnparser/raw/branch/main/all.txt"
     }
   ],
   "verify_url": "https://www.gstatic.com/generate_204",
