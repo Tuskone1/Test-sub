@@ -1,33 +1,33 @@
 {
   "mode": "auto",
-  "updated_utc": "2026-11-13T15:32:38+00:00",
+  "updated_utc": "2026-11-13T22:05:16+00:00",
   "probe_url": "https://cp.cloudflare.com/generate_204",
   "verify_url": "https://www.gstatic.com/generate_204",
   "sources": [
     {
       "group": "DE",
       "status": "ok",
-      "candidates_added": 18
+      "candidates_added": 24
     },
     {
       "group": "FI",
       "status": "ok",
-      "candidates_added": 4
+      "candidates_added": 5
     },
     {
       "group": "SE",
       "status": "ok",
-      "candidates_added": 5
+      "candidates_added": 3
     },
     {
       "group": "NL",
       "status": "ok",
-      "candidates_added": 19
+      "candidates_added": 25
     },
     {
       "group": "US",
       "status": "ok",
-      "candidates_added": 14
+      "candidates_added": 9
     },
     {
       "group": "BYPASS",
@@ -47,7 +47,7 @@
     {
       "group": "BYPASS",
       "status": "ok",
-      "candidates_added": 17
+      "candidates_added": 16
     },
     {
       "group": "BYPASS",
@@ -67,7 +67,7 @@
     {
       "group": "BACKUP",
       "status": "ok",
-      "candidates_added": 6
+      "candidates_added": 7
     },
     {
       "group": "BACKUP",
@@ -87,7 +87,7 @@
     {
       "group": "BACKUP",
       "status": "ok",
-      "candidates_added": 30
+      "candidates_added": 22
     },
     {
       "group": "BACKUP",
@@ -97,7 +97,7 @@
     {
       "group": "BACKUP",
       "status": "ok",
-      "candidates_added": 11
+      "candidates_added": 6
     },
     {
       "group": "BACKUP",
@@ -112,47 +112,47 @@
     {
       "group": "GB",
       "status": "ok",
-      "candidates_added": 5
+      "candidates_added": 2
     },
     {
       "group": "FR",
       "status": "ok",
-      "candidates_added": 1
+      "candidates_added": 5
     },
     {
       "group": "PL",
       "status": "ok",
-      "candidates_added": 6
+      "candidates_added": 13
     },
     {
       "group": "CA",
+      "status": "error",
+      "error_type": "HTTPError"
+    },
+    {
+      "group": "TR",
+      "status": "error",
+      "error_type": "HTTPError"
+    },
+    {
+      "group": "ES",
+      "status": "error",
+      "error_type": "HTTPError"
+    },
+    {
+      "group": "CZ",
       "status": "ok",
       "candidates_added": 1
     },
     {
-      "group": "TR",
-      "status": "ok",
-      "candidates_added": 0
-    },
-    {
-      "group": "ES",
-      "status": "ok",
-      "candidates_added": 4
-    },
-    {
-      "group": "CZ",
+      "group": "CH",
       "status": "error",
       "error_type": "HTTPError"
-    },
-    {
-      "group": "CH",
-      "status": "ok",
-      "candidates_added": 0
     },
     {
       "group": "AT",
-      "status": "error",
-      "error_type": "HTTPError"
+      "status": "ok",
+      "candidates_added": 1
     },
     {
       "group": "NO",
@@ -162,17 +162,17 @@
     {
       "group": "JP",
       "status": "ok",
-      "candidates_added": 0
+      "candidates_added": 3
     },
     {
       "group": "JSON",
       "status": "ok",
-      "candidates_added": 57
+      "candidates_added": 50
     },
     {
       "group": "JSON",
       "status": "ok",
-      "candidates_added": 18
+      "candidates_added": 34
     },
     {
       "group": "JSON",
@@ -198,280 +198,93 @@
   "groups": {
     "DE": {
       "status": "fresh",
-      "candidates_tested": 51,
-      "first_passed": 28,
+      "candidates_tested": 59,
+      "first_passed": 42,
       "passed": 15,
       "selected": 10,
       "hysteria2_tested": 1,
       "hysteria2_passed": 1,
       "hysteria2_selected": 1,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
     },
     "FI": {
       "status": "fresh",
-      "candidates_tested": 13,
-      "first_passed": 6,
-      "passed": 5,
-      "selected": 5,
-      "hysteria2_tested": 2,
-      "hysteria2_passed": 1,
-      "hysteria2_selected": 1,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
+      "candidates_tested": 15,
+      "first_passed": 12,
+      "passed": 12,
+      "selected": 10,
+      "hysteria2_tested": 1,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
     },
     "SE": {
       "status": "fresh",
-      "candidates_tested": 21,
-      "first_passed": 18,
-      "passed": 15,
+      "candidates_tested": 17,
+      "first_passed": 13,
+      "passed": 13,
       "selected": 10,
       "hysteria2_tested": 1,
       "hysteria2_passed": 0,
       "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
     },
     "NL": {
       "status": "fresh",
-      "candidates_tested": 58,
-      "first_passed": 40,
-      "passed": 14,
+      "candidates_tested": 66,
+      "first_passed": 52,
+      "passed": 15,
       "selected": 10,
-      "hysteria2_tested": 3,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
+      "hysteria2_tested": 1,
+      "hysteria2_passed": 1,
+      "hysteria2_selected": 1,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
     },
     "US": {
       "status": "fresh",
-      "candidates_tested": 40,
-      "first_passed": 23,
+      "candidates_tested": 35,
+      "first_passed": 22,
       "passed": 14,
       "selected": 10,
-      "hysteria2_tested": 2,
-      "hysteria2_passed": 1,
-      "hysteria2_selected": 1,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
+      "hysteria2_tested": 1,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
     },
     "GB": {
       "status": "fresh",
-      "candidates_tested": 23,
-      "first_passed": 11,
-      "passed": 11,
-      "selected": 10,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "FR": {
-      "status": "fresh",
-      "candidates_tested": 3,
-      "first_passed": 3,
-      "passed": 3,
-      "selected": 3,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "PL": {
-      "status": "fresh",
-      "candidates_tested": 18,
-      "first_passed": 9,
-      "passed": 9,
-      "selected": 9,
-      "hysteria2_tested": 1,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "CA": {
-      "status": "fresh",
-      "candidates_tested": 8,
-      "first_passed": 7,
-      "passed": 7,
-      "selected": 7,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "TR": {
-      "status": "fresh",
-      "candidates_tested": 8,
-      "first_passed": 7,
-      "passed": 7,
-      "selected": 7,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "ES": {
-      "status": "fresh",
-      "candidates_tested": 9,
-      "first_passed": 9,
-      "passed": 9,
-      "selected": 9,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "CZ": {
-      "status": "fresh",
-      "candidates_tested": 5,
-      "first_passed": 3,
-      "passed": 3,
-      "selected": 3,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "CH": {
-      "status": "fresh",
-      "candidates_tested": 7,
-      "first_passed": 7,
-      "passed": 7,
-      "selected": 7,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "AT": {
-      "status": "fresh",
-      "candidates_tested": 9,
-      "first_passed": 5,
-      "passed": 4,
-      "selected": 4,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "NO": {
-      "status": "fresh",
-      "candidates_tested": 1,
-      "first_passed": 1,
-      "passed": 1,
-      "selected": 1,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "JP": {
-      "status": "fresh",
-      "candidates_tested": 4,
-      "first_passed": 2,
-      "passed": 2,
-      "selected": 2,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "RU": {
-      "status": "fresh",
-      "candidates_tested": 36,
-      "first_passed": 18,
-      "passed": 13,
-      "selected": 10,
-      "hysteria2_tested": 2,
-      "hysteria2_passed": 2,
-      "hysteria2_selected": 1,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "HK": {
-      "status": "fresh",
-      "candidates_tested": 5,
-      "first_passed": 4,
-      "passed": 4,
-      "selected": 4,
-      "hysteria2_tested": 1,
-      "hysteria2_passed": 1,
-      "hysteria2_selected": 1,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "SG": {
-      "status": "fresh",
-      "candidates_tested": 7,
-      "first_passed": 2,
-      "passed": 2,
-      "selected": 2,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "BR": {
-      "status": "fresh",
-      "candidates_tested": 1,
-      "first_passed": 1,
-      "passed": 1,
-      "selected": 1,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "MD": {
-      "status": "fresh",
-      "candidates_tested": 3,
-      "first_passed": 2,
-      "passed": 2,
-      "selected": 2,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "UA": {
-      "status": "fresh",
-      "candidates_tested": 1,
-      "first_passed": 1,
-      "passed": 1,
-      "selected": 1,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "BY": {
-      "status": "fresh",
-      "candidates_tested": 7,
-      "first_passed": 6,
-      "passed": 6,
-      "selected": 6,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
-    },
-    "IN": {
-      "status": "previous",
-      "candidates_tested": 0,
-      "first_passed": 0,
-      "passed": 0,
-      "selected": 1,
-      "hysteria2_tested": 0,
-      "hysteria2_passed": 0,
-      "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T06:58:00+00:00"
-    },
-    "LT": {
-      "status": "fresh",
-      "candidates_tested": 9,
+      "candidates_tested": 10,
       "first_passed": 5,
       "passed": 5,
       "selected": 5,
-      "hysteria2_tested": 1,
+      "hysteria2_tested": 0,
       "hysteria2_passed": 0,
       "hysteria2_selected": 0,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
     },
-    "RO": {
+    "FR": {
+      "status": "fresh",
+      "candidates_tested": 11,
+      "first_passed": 9,
+      "passed": 9,
+      "selected": 9,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "PL": {
+      "status": "fresh",
+      "candidates_tested": 22,
+      "first_passed": 17,
+      "passed": 15,
+      "selected": 10,
+      "hysteria2_tested": 4,
+      "hysteria2_passed": 2,
+      "hysteria2_selected": 2,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "CA": {
       "status": "fresh",
       "candidates_tested": 2,
       "first_passed": 1,
@@ -480,11 +293,198 @@
       "hysteria2_tested": 0,
       "hysteria2_passed": 0,
       "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "TR": {
+      "status": "fresh",
+      "candidates_tested": 7,
+      "first_passed": 5,
+      "passed": 5,
+      "selected": 5,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "ES": {
+      "status": "fresh",
+      "candidates_tested": 5,
+      "first_passed": 3,
+      "passed": 3,
+      "selected": 3,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "CZ": {
+      "status": "fresh",
+      "candidates_tested": 10,
+      "first_passed": 6,
+      "passed": 4,
+      "selected": 4,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "CH": {
+      "status": "previous",
+      "candidates_tested": 2,
+      "first_passed": 0,
+      "passed": 0,
+      "selected": 7,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T15:32:38+00:00"
+    },
+    "AT": {
+      "status": "fresh",
+      "candidates_tested": 5,
+      "first_passed": 3,
+      "passed": 3,
+      "selected": 3,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "NO": {
+      "status": "previous",
+      "candidates_tested": 1,
+      "first_passed": 1,
+      "passed": 0,
+      "selected": 1,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T15:32:38+00:00"
+    },
+    "JP": {
+      "status": "fresh",
+      "candidates_tested": 8,
+      "first_passed": 6,
+      "passed": 6,
+      "selected": 6,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "RU": {
+      "status": "fresh",
+      "candidates_tested": 51,
+      "first_passed": 32,
+      "passed": 15,
+      "selected": 10,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "HK": {
+      "status": "fresh",
+      "candidates_tested": 7,
+      "first_passed": 6,
+      "passed": 6,
+      "selected": 6,
+      "hysteria2_tested": 1,
+      "hysteria2_passed": 1,
+      "hysteria2_selected": 1,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "SG": {
+      "status": "fresh",
+      "candidates_tested": 8,
+      "first_passed": 4,
+      "passed": 3,
+      "selected": 3,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "BR": {
+      "status": "fresh",
+      "candidates_tested": 3,
+      "first_passed": 1,
+      "passed": 1,
+      "selected": 1,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "MD": {
+      "status": "fresh",
+      "candidates_tested": 1,
+      "first_passed": 1,
+      "passed": 1,
+      "selected": 1,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "UA": {
+      "status": "fresh",
+      "candidates_tested": 2,
+      "first_passed": 2,
+      "passed": 2,
+      "selected": 2,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "BY": {
+      "status": "fresh",
+      "candidates_tested": 6,
+      "first_passed": 5,
+      "passed": 5,
+      "selected": 5,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "IN": {
+      "status": "fresh",
+      "candidates_tested": 1,
+      "first_passed": 1,
+      "passed": 1,
+      "selected": 1,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "LT": {
+      "status": "fresh",
+      "candidates_tested": 5,
+      "first_passed": 1,
+      "passed": 1,
+      "selected": 1,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
+    },
+    "RO": {
+      "status": "previous",
+      "candidates_tested": 0,
+      "first_passed": 0,
+      "passed": 0,
+      "selected": 1,
+      "hysteria2_tested": 0,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
       "last_success_utc": "2026-11-13T15:32:38+00:00"
     },
     "RS": {
       "status": "previous",
-      "candidates_tested": 1,
+      "candidates_tested": 4,
       "first_passed": 0,
       "passed": 0,
       "selected": 1,
@@ -506,14 +506,14 @@
     },
     "BYPASS": {
       "status": "fresh",
-      "candidates_tested": 174,
-      "first_passed": 81,
-      "passed": 73,
+      "candidates_tested": 167,
+      "first_passed": 75,
+      "passed": 68,
       "selected": 64,
-      "hysteria2_tested": 10,
-      "hysteria2_passed": 2,
-      "hysteria2_selected": 2,
-      "last_success_utc": "2026-11-13T15:32:38+00:00"
+      "hysteria2_tested": 8,
+      "hysteria2_passed": 0,
+      "hysteria2_selected": 0,
+      "last_success_utc": "2026-11-13T22:05:16+00:00"
     }
   },
   "notes": [
