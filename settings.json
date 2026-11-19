@@ -41,6 +41,10 @@
     },
     {
       "group": "BYPASS",
+      "url": "https://gitverse.ru/api/repos/bikinitw22/apelsintel/raw/branch/main/alive_bs.txt"
+    },
+    {
+      "group": "BYPASS",
       "url": "https://hub.mos.ru/novacommunity/freeproxynova/-/raw/main/%F0%9F%86%93ProxyNova%20%E2%9D%AF%20%F0%9F%97%BD%F0%9F%95%8A%E2%9C%8A%20%D0%A0%D1%83%D1%87%D0%BD%D0%BE%D0%B9%20%D0%B2%D1%8B%D0%B1%D0%BE%D1%80%20%D0%9E%D0%B1%D1%85%D0%BE%D0%B4%20%D0%91%D0%A1%20%28%D0%A2%D0%B5%D1%81%D1%82%29%20.txt"
     },
     {
@@ -58,6 +62,10 @@
     {
       "group": "BACKUP",
       "url": "https://raw.githubusercontent.com/Remiuc0ff/vpn-hiddifycode/refs/heads/main/allhiddifyvpn"
+    },
+    {
+      "group": "BACKUP",
+      "url": "https://raw.githubusercontent.com/Diversan313/apex-parser/main/subs/main/alive_bl.txt"
     },
     {
       "group": "BACKUP",
